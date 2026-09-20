@@ -1,12 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ClipboardList, Crown, MessageCircle, Users } from "lucide-react";
+import { ArrowLeft, CalendarClock, MessageCircle, Users } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ProgressBadge } from "@/components/dashboard/progress-badge";
-import { getMyGroupsForStudent } from "@/lib/data/groups";
-import { formatDateTime } from "@/lib/format";
+import { getCourseTaskDeadlines, getMyGroupsForStudent } from "@/lib/data/groups";
+import { formatDeadline } from "@/lib/format";
 
 export default async function StudentCourseGroupsPage({
   params,
@@ -14,7 +13,10 @@ export default async function StudentCourseGroupsPage({
   params: Promise<{ courseId: string }>;
 }) {
   const { courseId } = await params;
-  const allGroups = await getMyGroupsForStudent();
+  const [allGroups, tasks] = await Promise.all([
+    getMyGroupsForStudent(),
+    getCourseTaskDeadlines(courseId),
+  ]);
   const groups = allGroups.filter((g) => g.course_id === courseId);
 
   if (groups.length === 0) {
@@ -34,9 +36,7 @@ export default async function StudentCourseGroupsPage({
       </Link>
 
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          {courseName}
-        </h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{courseName}</h1>
         <p className="mt-1 text-sm text-muted-foreground">{courseCode}</p>
       </div>
 
@@ -53,18 +53,7 @@ export default async function StudentCourseGroupsPage({
               <p className="mb-2 text-sm font-medium">Anggota</p>
               <ul className="flex flex-col gap-1.5">
                 {group.members.map((member) => (
-                  <li
-                    key={member.profileId}
-                    className="flex items-center gap-2 text-sm"
-                  >
-                    {member.profileId === group.leader_id ? (
-                      <Crown
-                        className="size-3.5 text-amber-500"
-                        strokeWidth={2}
-                      />
-                    ) : (
-                      <span className="size-3.5" />
-                    )}
+                  <li key={member.profileId} className="text-sm">
                     {member.nickname ?? member.fullName}
                   </li>
                 ))}
@@ -91,35 +80,24 @@ export default async function StudentCourseGroupsPage({
 
             <div>
               <p className="mb-2 flex items-center gap-1.5 text-sm font-medium">
-                <ClipboardList className="size-3.5 text-muted-foreground" />
-                Progres tugas
+                <CalendarClock className="size-3.5 text-muted-foreground" />
+                Deadline tugas
               </p>
-              {group.progress.length === 0 ? (
+              {tasks.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  Belum ada progres yang dicatat admin.
+                  Belum ada tugas aktif di mata kuliah ini.
                 </p>
               ) : (
-                <ul className="flex flex-col gap-2">
-                  {group.progress.map((item) => (
+                <ul className="flex flex-col gap-1.5">
+                  {tasks.map((task) => (
                     <li
-                      key={item.taskId}
-                      className="rounded-xl bg-muted/50 px-3 py-2"
+                      key={task.id}
+                      className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-muted/50 px-3 py-2 text-sm"
                     >
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <p className="text-sm font-medium">
-                          {item.taskTitle}
-                        </p>
-                        <ProgressBadge status={item.progressStatus} />
-                      </div>
-                      {item.notes ? (
-                        <p className="mt-1 text-sm text-muted-foreground">
-                          {item.notes}
-                        </p>
-                      ) : null}
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Diperbarui {formatDateTime(item.updatedAt)} oleh{" "}
-                        {item.updatedByName}
-                      </p>
+                      <span className="font-medium">{task.title}</span>
+                      <span className="text-muted-foreground">
+                        {formatDeadline(task.deadline)}
+                      </span>
                     </li>
                   ))}
                 </ul>

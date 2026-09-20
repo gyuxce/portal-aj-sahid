@@ -81,16 +81,6 @@ export function formatDateTime(value: string | Date) {
   });
 }
 
-const PROGRESS_STATUS_LABEL: Record<string, string> = {
-  not_started: "Belum mulai",
-  in_progress: "Sedang berjalan",
-  done: "Selesai",
-};
-
-export function formatProgressStatus(status: string) {
-  return PROGRESS_STATUS_LABEL[status] ?? status;
-}
-
 const MATERIAL_TYPE_LABEL: Record<string, string> = {
   pdf: "PDF",
   ppt: "PPT",

@@ -2,38 +2,31 @@
 
 import { useActionState, useState } from "react";
 
-import { createGroup, type ActionState } from "@/lib/actions/groups";
+import { updateGroup, type ActionState } from "@/lib/actions/groups";
 import { StudentPicker } from "@/app/admin/groups/student-picker";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function CreateGroupForm({
-  courseId,
+export function EditGroupForm({
+  groupId,
   students,
   takenIds,
+  currentLink,
 }: {
-  courseId: string;
+  groupId: string;
   students: { id: string; full_name: string }[];
   takenIds: string[];
+  currentLink: string | null;
 }) {
   const [state, formAction, pending] = useActionState<ActionState, FormData>(
-    createGroup,
+    updateGroup,
     null,
   );
+  // Selection resets on its own: the page re-keys this form by member list,
+  // so a successful save remounts it with an empty picker.
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [seenState, setSeenState] = useState(state);
-
-  // Clearing the checkboxes once the save lands, so the next group does not
-  // start with the previous one's members still ticked. React resets the
-  // uncontrolled fields itself; only this controlled set needs handling.
-  if (state !== seenState) {
-    setSeenState(state);
-    if (state?.success) {
-      setSelected(new Set());
-    }
-  }
 
   function toggle(id: string) {
     setSelected((prev) => {
@@ -49,7 +42,7 @@ export function CreateGroupForm({
 
   return (
     <form action={formAction} className="flex flex-col gap-4">
-      <input type="hidden" name="course_id" value={courseId} />
+      <input type="hidden" name="group_id" value={groupId} />
 
       {state?.error ? (
         <Alert variant="destructive">
@@ -59,17 +52,12 @@ export function CreateGroupForm({
 
       {state?.success ? (
         <Alert>
-          <AlertDescription>Kelompok tersimpan.</AlertDescription>
+          <AlertDescription>Perubahan tersimpan.</AlertDescription>
         </Alert>
       ) : null}
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="name">Nama kelompok</Label>
-        <Input id="name" name="name" placeholder="Kelompok 1" required />
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <Label>Anggota</Label>
+        <Label>Tambah anggota</Label>
         <StudentPicker
           students={students}
           takenIds={new Set(takenIds)}
@@ -79,17 +67,23 @@ export function CreateGroupForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="wa_group_link">Link grup WhatsApp (opsional)</Label>
+        <Label htmlFor={`wa-${groupId}`}>Link grup WhatsApp</Label>
         <Input
-          id="wa_group_link"
+          id={`wa-${groupId}`}
           name="wa_group_link"
           type="url"
+          defaultValue={currentLink ?? ""}
           placeholder="https://chat.whatsapp.com/..."
         />
       </div>
 
-      <Button type="submit" disabled={pending} className="w-fit">
-        {pending ? "Menyimpan..." : "Simpan kelompok"}
+      <Button
+        type="submit"
+        variant="outline"
+        disabled={pending}
+        className="w-fit"
+      >
+        {pending ? "Menyimpan..." : "Simpan"}
       </Button>
     </form>
   );

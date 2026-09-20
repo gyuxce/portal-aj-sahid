@@ -3,7 +3,7 @@ import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/dal";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
-import type { Group, GroupProgressStatus } from "@/lib/types/database";
+import type { Group } from "@/lib/types/database";
 
 export type MemberInfo = {
   profileId: string;
@@ -11,21 +11,16 @@ export type MemberInfo = {
   nickname: string | null;
 };
 
-export type ProgressInfo = {
-  taskId: string;
-  taskTitle: string;
-  progressStatus: GroupProgressStatus;
-  notes: string | null;
-  updatedAt: string;
-  updatedByName: string;
+export type CourseTaskDeadline = {
+  id: string;
+  title: string;
+  deadline: string;
 };
 
 export type GroupWithDetails = Group & {
   courseName: string;
   courseCode: string;
-  leaderName: string | null;
   members: MemberInfo[];
-  progress: ProgressInfo[];
 };
 
 const now = new Date().toISOString();
@@ -35,14 +30,13 @@ const DUMMY_GROUPS: GroupWithDetails[] = [
     id: "dummy-group-1",
     course_id: "dummy-2",
     name: "Kelompok 1",
-    leader_id: "dummy-student-1",
+    leader_id: null,
     notes: null,
     wa_group_link: "https://chat.whatsapp.com/dummy-group-link",
     created_at: now,
     updated_at: now,
     courseName: "Basis Data Terapan",
     courseCode: "MK-102",
-    leaderName: "Mahasiswa Contoh Satu",
     members: [
       {
         profileId: "dummy-student-1",
@@ -53,16 +47,6 @@ const DUMMY_GROUPS: GroupWithDetails[] = [
         profileId: "dummy-student-2",
         fullName: "Mahasiswa Contoh Dua",
         nickname: "Mhs2",
-      },
-    ],
-    progress: [
-      {
-        taskId: "dummy-task-2",
-        taskTitle: "Tugas Kelompok 1: ERD",
-        progressStatus: "in_progress",
-        notes: "ERD draft sudah dibuat.",
-        updatedAt: now,
-        updatedByName: "Admin Contoh",
       },
     ],
   },
@@ -78,30 +62,25 @@ async function attachDetails(groups: RawGroup[]): Promise<GroupWithDetails[]> {
   const supabase = await createClient();
   const groupIds = groups.map((g) => g.id);
 
-  const [{ data: members }, { data: progressRows }, { data: profiles }] =
-    await Promise.all([
-      supabase
-        .from("group_members")
-        .select("group_id, profile_id")
-        .in("group_id", groupIds),
-      supabase
-        .from("group_task_updates")
-        .select("group_id, task_id, progress_status, notes, updated_at, updated_by")
-        .in("group_id", groupIds),
-      supabase.from("profiles").select("id, full_name, nickname"),
-    ]);
+  const { data: members } = await supabase
+    .from("group_members")
+    .select("group_id, profile_id")
+    .in("group_id", groupIds);
+
+  const profileIds = [...new Set((members ?? []).map((m) => m.profile_id))];
+  const { data: profiles } =
+    profileIds.length > 0
+      ? await supabase
+          .from("profiles")
+          .select("id, full_name, nickname")
+          .in("id", profileIds)
+      : { data: [] as { id: string; full_name: string; nickname: string | null }[] };
 
   const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
 
-  const taskIds = [...new Set((progressRows ?? []).map((p) => p.task_id))];
-  const { data: tasks } =
-    taskIds.length > 0
-      ? await supabase.from("tasks").select("id, title").in("id", taskIds)
-      : { data: [] as { id: string; title: string }[] };
-  const taskMap = new Map((tasks ?? []).map((t) => [t.id, t.title]));
-
-  return groups.map((group) => {
-    const groupMembers = (members ?? [])
+  return groups.map((group) => ({
+    ...group,
+    members: (members ?? [])
       .filter((m) => m.group_id === group.id)
       .map((m) => {
         const profile = profileMap.get(m.profile_id);
@@ -110,28 +89,9 @@ async function attachDetails(groups: RawGroup[]): Promise<GroupWithDetails[]> {
           fullName: profile?.full_name ?? "Mahasiswa",
           nickname: profile?.nickname ?? null,
         };
-      });
-
-    const groupProgress = (progressRows ?? [])
-      .filter((p) => p.group_id === group.id)
-      .map((p) => ({
-        taskId: p.task_id,
-        taskTitle: taskMap.get(p.task_id) ?? "Tugas",
-        progressStatus: p.progress_status as GroupProgressStatus,
-        notes: p.notes,
-        updatedAt: p.updated_at,
-        updatedByName: profileMap.get(p.updated_by)?.full_name ?? "Admin",
-      }));
-
-    return {
-      ...group,
-      leaderName: group.leader_id
-        ? (profileMap.get(group.leader_id)?.full_name ?? null)
-        : null,
-      members: groupMembers,
-      progress: groupProgress,
-    };
-  });
+      })
+      .sort((a, b) => a.fullName.localeCompare(b.fullName)),
+  }));
 }
 
 async function fetchGroupsWithCourse(courseIds?: string[]): Promise<RawGroup[]> {
@@ -247,24 +207,31 @@ export async function getStudentProfilesForSelect(): Promise<
   return data ?? [];
 }
 
-
-export async function getActiveTasksForGroupForm(courseId: string): Promise<
-  { id: string; title: string }[]
-> {
+/** Deadlines shown read-only on each group card, so the admin sees what the
+ * group is working toward without maintaining a separate progress record. */
+export async function getCourseTaskDeadlines(
+  courseId: string,
+): Promise<CourseTaskDeadline[]> {
   if (!isSupabaseConfigured()) {
-    return [{ id: "dummy-task-2", title: "Tugas Kelompok 1: ERD" }];
+    return [
+      {
+        id: "dummy-task-2",
+        title: "Tugas Kelompok 1: ERD",
+        deadline: now,
+      },
+    ];
   }
 
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("tasks")
-    .select("id, title")
+    .select("id, title, deadline")
     .eq("course_id", courseId)
     .eq("status", "active")
     .order("deadline");
 
   if (error) {
-    throw new Error("Gagal memuat daftar tugas.");
+    throw new Error("Gagal memuat deadline tugas.");
   }
 
   return data ?? [];
