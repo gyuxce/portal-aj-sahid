@@ -9,25 +9,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-function toDatetimeLocalValue(value: string) {
-  const date = new Date(value);
-  const offset = date.getTimezoneOffset();
-  const local = new Date(date.getTime() - offset * 60 * 1000);
-  return local.toISOString().slice(0, 16);
-}
-
 export function EditGroupForm({
   groupId,
   students,
   takenIds,
   currentLink,
-  currentPresentationAt,
 }: {
   groupId: string;
   students: { id: string; full_name: string }[];
   takenIds: string[];
   currentLink: string | null;
-  currentPresentationAt: string | null;
 }) {
   const [state, formAction, pending] = useActionState<ActionState, FormData>(
     updateGroup,
@@ -84,26 +75,6 @@ export function EditGroupForm({
           defaultValue={currentLink ?? ""}
           placeholder="https://chat.whatsapp.com/..."
         />
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <Label htmlFor={`presentation-${groupId}`}>
-          Jadwal presentasi kelompok
-        </Label>
-        <Input
-          id={`presentation-${groupId}`}
-          name="presentation_at"
-          type="datetime-local"
-          defaultValue={
-            currentPresentationAt
-              ? toDatetimeLocalValue(currentPresentationAt)
-              : ""
-          }
-        />
-        <p className="text-xs text-muted-foreground">
-          Opsional — beda dari deadline tugas, ini jadwal kelompok ini
-          kebagian presentasi.
-        </p>
       </div>
 
       <Button

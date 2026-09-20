@@ -4,7 +4,11 @@ import { revalidatePath } from "next/cache";
 
 import { requireAdminProfile } from "@/lib/dal";
 import { createClient } from "@/lib/supabase/server";
-import { groupSchema, updateGroupSchema } from "@/lib/validations/groups";
+import {
+  groupSchema,
+  presentationScheduleSchema,
+  updateGroupSchema,
+} from "@/lib/validations/groups";
 
 export type ActionState = { error?: string; success?: boolean } | null;
 
@@ -84,7 +88,6 @@ export async function updateGroup(
     group_id: formData.get("group_id"),
     profile_ids: formData.getAll("profile_ids"),
     wa_group_link: formData.get("wa_group_link"),
-    presentation_at: formData.get("presentation_at"),
   });
 
   if (!parsed.success) {
@@ -113,16 +116,44 @@ export async function updateGroup(
 
   const { error: linkError } = await supabase
     .from("groups")
+    .update({ wa_group_link: parsed.data.wa_group_link || null })
+    .eq("id", parsed.data.group_id);
+
+  if (linkError) {
+    return { error: "Gagal menyimpan link grup WhatsApp." };
+  }
+
+  revalidateGroupViews();
+  return { success: true };
+}
+
+export async function updateGroupPresentation(
+  _prevState: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  await requireAdminProfile();
+
+  const parsed = presentationScheduleSchema.safeParse({
+    group_id: formData.get("group_id"),
+    presentation_at: formData.get("presentation_at"),
+  });
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Data tidak valid." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("groups")
     .update({
-      wa_group_link: parsed.data.wa_group_link || null,
       presentation_at: parsed.data.presentation_at
         ? new Date(parsed.data.presentation_at).toISOString()
         : null,
     })
     .eq("id", parsed.data.group_id);
 
-  if (linkError) {
-    return { error: "Gagal menyimpan link grup WhatsApp dan jadwal presentasi." };
+  if (error) {
+    return { error: "Gagal menyimpan jadwal presentasi." };
   }
 
   revalidateGroupViews();

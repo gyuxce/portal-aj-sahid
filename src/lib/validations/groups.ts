@@ -22,14 +22,24 @@ export const groupSchema = z.object({
 
 export type GroupInput = z.infer<typeof groupSchema>;
 
-// Members, the WhatsApp link, and the presentation schedule are saved by one
-// submit — previously three separate forms with three "Simpan" buttons for
-// the same group.
+// Members and the WhatsApp link are saved by one submit — previously three
+// separate forms with three "Simpan" buttons for the same group.
 export const updateGroupSchema = z.object({
   group_id: z.uuid({ error: "Kelompok tidak valid." }),
   profile_ids: z.array(z.uuid()).optional().default([]),
   wa_group_link: waLink,
-  presentation_at: presentationAt,
 });
 
 export type UpdateGroupInput = z.infer<typeof updateGroupSchema>;
+
+// Its own tiny form/action — bundling this into updateGroupSchema made the
+// member-picker form the only way to reach a field admins adjust often
+// (closer to presentation day), while members/WA link change rarely.
+export const presentationScheduleSchema = z.object({
+  group_id: z.uuid({ error: "Kelompok tidak valid." }),
+  presentation_at: presentationAt,
+});
+
+export type PresentationScheduleInput = z.infer<
+  typeof presentationScheduleSchema
+>;
