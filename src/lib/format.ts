@@ -62,12 +62,10 @@ export function formatDeadlineStatusLabel(status: DeadlineStatus) {
 }
 
 export function formatDeadline(deadline: string | Date) {
-  return new Date(deadline).toLocaleString("id-ID", {
+  return new Date(deadline).toLocaleDateString("id-ID", {
     weekday: "short",
     day: "numeric",
     month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
   });
 }
 

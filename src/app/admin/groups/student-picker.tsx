@@ -68,8 +68,6 @@ export function StudentPicker({
               >
                 <input
                   type="checkbox"
-                  name="profile_ids"
-                  value={student.id}
                   checked={selected.has(student.id)}
                   disabled={taken}
                   onChange={() => onToggle(student.id)}

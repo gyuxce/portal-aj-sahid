@@ -9,11 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { TaskWithCourse } from "@/lib/data/tasks";
 
-function toDatetimeLocalValue(deadline: string) {
+function toDateValue(deadline: string) {
   const date = new Date(deadline);
   const offset = date.getTimezoneOffset();
   const local = new Date(date.getTime() - offset * 60 * 1000);
-  return local.toISOString().slice(0, 16);
+  return local.toISOString().slice(0, 10);
 }
 
 export function EditTaskForm({
@@ -103,8 +103,8 @@ export function EditTaskForm({
         <Input
           id={`deadline-${task.id}`}
           name="deadline"
-          type="datetime-local"
-          defaultValue={toDatetimeLocalValue(task.deadline)}
+          type="date"
+          defaultValue={toDateValue(task.deadline)}
           required
         />
       </div>

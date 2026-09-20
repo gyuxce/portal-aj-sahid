@@ -96,7 +96,11 @@ async function attachDetails(groups: RawGroup[]): Promise<GroupWithDetails[]> {
 
 async function fetchGroupsWithCourse(courseIds?: string[]): Promise<RawGroup[]> {
   const supabase = await createClient();
-  let query = supabase.from("groups").select("*").order("name");
+  // Sorted in JS, not via Postgres .order("name") — Postgres collation sorts
+  // "Kelompok 10" before "Kelompok 2" (plain string compare), which read as
+  // out of order to admins naming groups "Kelompok 1", "Kelompok 2", ...
+  // localeCompare's numeric mode treats the embedded number as a number.
+  let query = supabase.from("groups").select("*");
   if (courseIds) {
     query = query.in("course_id", courseIds);
   }
@@ -116,11 +120,13 @@ async function fetchGroupsWithCourse(courseIds?: string[]): Promise<RawGroup[]> 
     .in("id", uniqueCourseIds);
   const courseMap = new Map((courses ?? []).map((c) => [c.id, c]));
 
-  return groups.map((g) => ({
-    ...g,
-    courseName: courseMap.get(g.course_id)?.name ?? "Mata kuliah",
-    courseCode: courseMap.get(g.course_id)?.code ?? "",
-  }));
+  return groups
+    .map((g) => ({
+      ...g,
+      courseName: courseMap.get(g.course_id)?.name ?? "Mata kuliah",
+      courseCode: courseMap.get(g.course_id)?.code ?? "",
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name, "id", { numeric: true }));
 }
 
 // Every signed-in user — admin or student — can read every group (see

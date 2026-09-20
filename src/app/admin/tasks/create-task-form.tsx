@@ -195,7 +195,7 @@ export function CreateTaskForm({
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="deadline">Deadline</Label>
-        <Input id="deadline" name="deadline" type="datetime-local" required />
+        <Input id="deadline" name="deadline" type="date" required />
       </div>
 
       <div className="flex flex-col gap-2 sm:col-span-2">

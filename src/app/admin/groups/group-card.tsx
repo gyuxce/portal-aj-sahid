@@ -18,9 +18,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { ConfirmDeleteButton } from "@/components/dashboard/confirm-delete-button";
 import { EditGroupForm } from "@/app/admin/groups/edit-group-form";
 import { PresentationScheduleForm } from "@/app/admin/groups/presentation-schedule-form";
-import { removeGroupMember } from "@/lib/actions/groups";
+import { deleteGroup, removeGroupMember } from "@/lib/actions/groups";
 import { formatDeadline } from "@/lib/format";
 import type { CourseTaskDeadline, GroupWithDetails } from "@/lib/data/groups";
 
@@ -45,31 +46,39 @@ export function GroupCard({
        * member picker; filled groups stay collapsed to a one-line summary
        * so a long list of "done" groups doesn't turn into a wall of forms. */}
       <Collapsible defaultOpen={needsSetup}>
-        <CollapsibleTrigger
-          className="group flex w-full items-center gap-3 px-6 py-5 text-left transition-colors hover:bg-muted/40"
-          render={<button type="button" />}
-        >
-          <span className="brand-gradient flex size-10 shrink-0 items-center justify-center rounded-2xl text-white">
-            <Users className="size-4.5" strokeWidth={2} />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate font-medium">{group.name}</p>
-            <p className="truncate text-sm text-muted-foreground">
-              {needsSetup
-                ? "Belum ada anggota"
-                : group.members.map((m) => m.fullName).join(", ")}
-            </p>
-          </div>
-          {group.wa_group_link ? (
-            <Badge variant="secondary" className="shrink-0 rounded-full">
-              WA tersambung
-            </Badge>
+        <div className="flex items-center gap-1 pr-3">
+          <CollapsibleTrigger
+            className="group flex min-w-0 flex-1 items-center gap-3 px-6 py-5 text-left transition-colors hover:bg-muted/40"
+            render={<button type="button" />}
+          >
+            <span className="brand-gradient flex size-10 shrink-0 items-center justify-center rounded-2xl text-white">
+              <Users className="size-4.5" strokeWidth={2} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-medium">{group.name}</p>
+              <p className="truncate text-sm text-muted-foreground">
+                {needsSetup
+                  ? "Belum ada anggota"
+                  : group.members.map((m) => m.fullName).join(", ")}
+              </p>
+            </div>
+            {group.wa_group_link ? (
+              <Badge variant="secondary" className="shrink-0 rounded-full">
+                WA tersambung
+              </Badge>
+            ) : null}
+            <ChevronDown
+              className="size-4 shrink-0 text-muted-foreground transition-transform group-data-[panel-open]:rotate-180"
+              strokeWidth={2}
+            />
+          </CollapsibleTrigger>
+          {configured ? (
+            <ConfirmDeleteButton
+              onDelete={deleteGroup.bind(null, group.id)}
+              warning={`Ini menghapus kelompok "${group.name}" beserta semua keanggotaannya. Tugas dan mata kuliah terkait tidak ikut terhapus.`}
+            />
           ) : null}
-          <ChevronDown
-            className="size-4 shrink-0 text-muted-foreground transition-transform group-data-[panel-open]:rotate-180"
-            strokeWidth={2}
-          />
-        </CollapsibleTrigger>
+        </div>
 
         <CollapsibleContent>
           <CardContent className="flex flex-col gap-5 pt-0 pb-6">
@@ -188,7 +197,7 @@ export function GroupCard({
                     render={<button type="button" />}
                   >
                     <Settings2 className="size-3.5" strokeWidth={2} />
-                    Kelola anggota & link WA
+                    Ubah nama, anggota & link WA
                     <ChevronDown
                       className="size-3.5 transition-transform group-data-[panel-open]:rotate-180"
                       strokeWidth={2}
@@ -199,6 +208,7 @@ export function GroupCard({
                       <EditGroupForm
                         key={group.members.map((m) => m.profileId).join(",")}
                         groupId={group.id}
+                        currentName={group.name}
                         students={students}
                         takenIds={takenIds}
                         currentLink={group.wa_group_link}

@@ -9,11 +9,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-function toDatetimeLocalValue(value: string) {
+function toDateValue(value: string) {
   const date = new Date(value);
   const offset = date.getTimezoneOffset();
   const local = new Date(date.getTime() - offset * 60 * 1000);
-  return local.toISOString().slice(0, 16);
+  return local.toISOString().slice(0, 10);
 }
 
 /** Deliberately its own tiny form, separate from EditGroupForm — admins set
@@ -37,11 +37,9 @@ export function PresentationScheduleForm({
       <Input
         aria-label="Jadwal presentasi kelompok"
         name="presentation_at"
-        type="datetime-local"
+        type="date"
         defaultValue={
-          currentPresentationAt
-            ? toDatetimeLocalValue(currentPresentationAt)
-            : ""
+          currentPresentationAt ? toDateValue(currentPresentationAt) : ""
         }
         className="h-8 w-fit"
       />

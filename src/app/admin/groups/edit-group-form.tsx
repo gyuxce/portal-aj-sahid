@@ -11,11 +11,13 @@ import { Label } from "@/components/ui/label";
 
 export function EditGroupForm({
   groupId,
+  currentName,
   students,
   takenIds,
   currentLink,
 }: {
   groupId: string;
+  currentName: string;
   students: { id: string; full_name: string }[];
   takenIds: string[];
   currentLink: string | null;
@@ -43,6 +45,10 @@ export function EditGroupForm({
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <input type="hidden" name="group_id" value={groupId} />
+      {/* One joined field instead of many same-name checkboxes — more
+       * predictable than relying on formData.getAll() picking up every
+       * checked box, and avoids that failure mode entirely. */}
+      <input type="hidden" name="profile_ids" value={[...selected].join(",")} />
 
       {state?.error ? (
         <Alert variant="destructive">
@@ -55,6 +61,16 @@ export function EditGroupForm({
           <AlertDescription>Perubahan tersimpan.</AlertDescription>
         </Alert>
       ) : null}
+
+      <div className="flex flex-col gap-2">
+        <Label htmlFor={`name-${groupId}`}>Nama kelompok</Label>
+        <Input
+          id={`name-${groupId}`}
+          name="name"
+          defaultValue={currentName}
+          required
+        />
+      </div>
 
       <div className="flex flex-col gap-2">
         <Label>Tambah anggota</Label>

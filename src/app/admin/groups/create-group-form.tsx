@@ -50,6 +50,10 @@ export function CreateGroupForm({
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <input type="hidden" name="course_id" value={courseId} />
+      {/* One joined field instead of many same-name checkboxes — more
+       * predictable than relying on formData.getAll() picking up every
+       * checked box, and avoids that failure mode entirely. */}
+      <input type="hidden" name="profile_ids" value={[...selected].join(",")} />
 
       {state?.error ? (
         <Alert variant="destructive">

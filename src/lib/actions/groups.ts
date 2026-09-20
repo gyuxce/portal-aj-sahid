@@ -20,6 +20,15 @@ function revalidateGroupViews() {
   revalidatePath("/dashboard/groups", "layout");
 }
 
+// The picker sends one comma-joined hidden field (see StudentPicker) instead
+// of many same-name checkboxes, so this always gets every selected id.
+function parseProfileIds(value: FormDataEntryValue | null): string[] {
+  if (typeof value !== "string" || value.length === 0) {
+    return [];
+  }
+  return value.split(",").filter(Boolean);
+}
+
 export async function createGroup(
   _prevState: ActionState,
   formData: FormData,
@@ -30,7 +39,7 @@ export async function createGroup(
     course_id: formData.get("course_id"),
     name: formData.get("name"),
     wa_group_link: formData.get("wa_group_link"),
-    profile_ids: formData.getAll("profile_ids"),
+    profile_ids: parseProfileIds(formData.get("profile_ids")),
   });
 
   if (!parsed.success) {
@@ -86,7 +95,8 @@ export async function updateGroup(
 
   const parsed = updateGroupSchema.safeParse({
     group_id: formData.get("group_id"),
-    profile_ids: formData.getAll("profile_ids"),
+    name: formData.get("name"),
+    profile_ids: parseProfileIds(formData.get("profile_ids")),
     wa_group_link: formData.get("wa_group_link"),
   });
 
@@ -114,13 +124,21 @@ export async function updateGroup(
     }
   }
 
-  const { error: linkError } = await supabase
+  const { error: updateError } = await supabase
     .from("groups")
-    .update({ wa_group_link: parsed.data.wa_group_link || null })
+    .update({
+      name: parsed.data.name,
+      wa_group_link: parsed.data.wa_group_link || null,
+    })
     .eq("id", parsed.data.group_id);
 
-  if (linkError) {
-    return { error: "Gagal menyimpan link grup WhatsApp." };
+  if (updateError) {
+    return {
+      error:
+        updateError.code === "23505"
+          ? "Nama kelompok sudah dipakai di mata kuliah ini."
+          : "Gagal menyimpan perubahan kelompok.",
+    };
   }
 
   revalidateGroupViews();
@@ -171,6 +189,19 @@ export async function removeGroupMember(groupId: string, profileId: string) {
 
   if (error) {
     throw new Error("Gagal menghapus anggota.");
+  }
+
+  revalidateGroupViews();
+}
+
+export async function deleteGroup(groupId: string) {
+  await requireAdminProfile();
+  const supabase = await createClient();
+  // ON DELETE CASCADE on group_members takes care of memberships.
+  const { error } = await supabase.from("groups").delete().eq("id", groupId);
+
+  if (error) {
+    throw new Error("Gagal menghapus kelompok.");
   }
 
   revalidateGroupViews();
