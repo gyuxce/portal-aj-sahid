@@ -12,7 +12,7 @@ export function SectionNav({ items }: { items: NavItem[] }) {
   return (
     <nav
       aria-label="Navigasi bagian"
-      className="scrollbar-none flex gap-2 overflow-x-auto px-4 pb-4 sm:px-6"
+      className="scrollbar-none flex gap-2 overflow-x-auto px-4 pt-3 pb-4 sm:px-6"
     >
       {items.map((item) => {
         const isActive =

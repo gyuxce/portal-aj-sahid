@@ -22,15 +22,13 @@ export const getCurrentUser = cache(async () => {
 });
 
 export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getCurrentUser();
 
   if (!user) {
     return null;
   }
 
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("profiles")
     .select("*")
