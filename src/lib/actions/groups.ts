@@ -84,6 +84,7 @@ export async function updateGroup(
     group_id: formData.get("group_id"),
     profile_ids: formData.getAll("profile_ids"),
     wa_group_link: formData.get("wa_group_link"),
+    presentation_at: formData.get("presentation_at"),
   });
 
   if (!parsed.success) {
@@ -112,11 +113,16 @@ export async function updateGroup(
 
   const { error: linkError } = await supabase
     .from("groups")
-    .update({ wa_group_link: parsed.data.wa_group_link || null })
+    .update({
+      wa_group_link: parsed.data.wa_group_link || null,
+      presentation_at: parsed.data.presentation_at
+        ? new Date(parsed.data.presentation_at).toISOString()
+        : null,
+    })
     .eq("id", parsed.data.group_id);
 
   if (linkError) {
-    return { error: "Gagal menyimpan link grup WhatsApp." };
+    return { error: "Gagal menyimpan link grup WhatsApp dan jadwal presentasi." };
   }
 
   revalidateGroupViews();

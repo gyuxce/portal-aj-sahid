@@ -138,6 +138,7 @@ export interface Database {
           leader_id: string | null;
           notes: string | null;
           wa_group_link: string | null;
+          presentation_at: string | null;
           created_at: string;
           updated_at: string;
         };

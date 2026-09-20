@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { getCurrentProfile } from "@/lib/dal";
 import { getAllGroups, getCourseTaskDeadlines } from "@/lib/data/groups";
-import { formatDeadline } from "@/lib/format";
+import { formatDateTime, formatDeadline } from "@/lib/format";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
 export default async function StudentCourseGroupsPage({
@@ -96,6 +96,18 @@ export default async function StudentCourseGroupsPage({
               ) : null}
 
               <Separator />
+
+              {group.presentation_at ? (
+                <div>
+                  <p className="mb-2 flex items-center gap-1.5 text-sm font-medium">
+                    <CalendarClock className="size-3.5 text-muted-foreground" />
+                    Jadwal presentasi kelompok
+                  </p>
+                  <p className="text-sm">
+                    {formatDateTime(group.presentation_at)}
+                  </p>
+                </div>
+              ) : null}
 
               <div>
                 <p className="mb-2 flex items-center gap-1.5 text-sm font-medium">

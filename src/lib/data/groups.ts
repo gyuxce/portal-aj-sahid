@@ -32,6 +32,7 @@ const DUMMY_GROUPS: GroupWithDetails[] = [
     leader_id: null,
     notes: null,
     wa_group_link: "https://chat.whatsapp.com/dummy-group-link",
+    presentation_at: null,
     created_at: now,
     updated_at: now,
     courseName: "Basis Data Terapan",

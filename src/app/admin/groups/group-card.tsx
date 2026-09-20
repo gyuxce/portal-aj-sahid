@@ -20,7 +20,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { EditGroupForm } from "@/app/admin/groups/edit-group-form";
 import { removeGroupMember } from "@/lib/actions/groups";
-import { formatDeadline } from "@/lib/format";
+import { formatDeadline, formatDateTime } from "@/lib/format";
 import type { CourseTaskDeadline, GroupWithDetails } from "@/lib/data/groups";
 
 export function GroupCard({
@@ -133,6 +133,20 @@ export function GroupCard({
             <div>
               <p className="mb-2 flex items-center gap-1.5 text-sm font-medium">
                 <CalendarClock className="size-3.5 text-muted-foreground" />
+                Jadwal presentasi kelompok
+              </p>
+              {group.presentation_at ? (
+                <p className="text-sm">{formatDateTime(group.presentation_at)}</p>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Belum diatur.
+                </p>
+              )}
+            </div>
+
+            <div>
+              <p className="mb-2 flex items-center gap-1.5 text-sm font-medium">
+                <CalendarClock className="size-3.5 text-muted-foreground" />
                 Deadline tugas
               </p>
               {tasks.length === 0 ? (
@@ -170,7 +184,7 @@ export function GroupCard({
                     render={<button type="button" />}
                   >
                     <Settings2 className="size-3.5" strokeWidth={2} />
-                    Kelola anggota & link WA
+                    Kelola anggota, link WA & jadwal presentasi
                     <ChevronDown
                       className="size-3.5 transition-transform group-data-[panel-open]:rotate-180"
                       strokeWidth={2}
@@ -184,6 +198,7 @@ export function GroupCard({
                         students={students}
                         takenIds={takenIds}
                         currentLink={group.wa_group_link}
+                        currentPresentationAt={group.presentation_at}
                       />
                     </div>
                   </CollapsibleContent>
