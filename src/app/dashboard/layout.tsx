@@ -36,7 +36,7 @@ export default async function DashboardLayout({
         isAdminArea={false}
       />
 
-      <div className="flex min-h-screen flex-1 flex-col">
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         {/* Mobile-only header + pill nav; desktop uses Sidebar instead. */}
         <div className="md:hidden">
           <Topbar
