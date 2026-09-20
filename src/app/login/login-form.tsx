@@ -1,6 +1,7 @@
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { useActionState } from "react";
 
 import { login, type LoginActionState } from "@/app/login/actions";
@@ -14,6 +15,7 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
     LoginActionState,
     FormData
   >(login, null);
+  const [showPassword, setShowPassword] = useState(false);
 
   return (
     <form action={formAction} className="flex flex-col gap-5">
@@ -31,29 +33,38 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
           id="identifier"
           name="identifier"
           type="text"
-          placeholder="Admin: email — Mahasiswa: NIM"
           autoComplete="username"
           required
         />
+        <p className="text-xs text-muted-foreground">
+          Admin pakai email, mahasiswa pakai NIM.
+        </p>
       </div>
 
       <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <Label htmlFor="password">Password</Label>
-          <Link
-            href="/forgot-password"
-            className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+        <Label htmlFor="password">Password</Label>
+        <div className="relative">
+          <Input
+            id="password"
+            name="password"
+            type={showPassword ? "text" : "password"}
+            autoComplete="current-password"
+            required
+            className="pr-9"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
+            className="absolute top-1/2 right-2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
           >
-            Lupa password?
-          </Link>
+            {showPassword ? (
+              <EyeOff className="size-4" strokeWidth={2} />
+            ) : (
+              <Eye className="size-4" strokeWidth={2} />
+            )}
+          </button>
         </div>
-        <Input
-          id="password"
-          name="password"
-          type="password"
-          autoComplete="current-password"
-          required
-        />
       </div>
 
       <Button type="submit" className="w-full" disabled={pending}>
