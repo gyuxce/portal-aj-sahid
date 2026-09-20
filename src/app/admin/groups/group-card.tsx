@@ -1,6 +1,13 @@
 "use client";
 
-import { ChevronDown, CalendarClock, Users, X } from "lucide-react";
+import {
+  CalendarClock,
+  ChevronDown,
+  MessageCircle,
+  Settings2,
+  Users,
+  X,
+} from "lucide-react";
 
 import {
   Collapsible,
@@ -29,12 +36,14 @@ export function GroupCard({
   tasks: CourseTaskDeadline[];
   configured: boolean;
 }) {
+  const needsSetup = group.members.length === 0;
+
   return (
     <Card className="overflow-hidden rounded-3xl p-0">
       {/* Empty groups open by default so the admin lands straight on the
        * member picker; filled groups stay collapsed to a one-line summary
        * so a long list of "done" groups doesn't turn into a wall of forms. */}
-      <Collapsible defaultOpen={group.members.length === 0}>
+      <Collapsible defaultOpen={needsSetup}>
         <CollapsibleTrigger
           className="group flex w-full items-center gap-3 px-6 py-5 text-left transition-colors hover:bg-muted/40"
           render={<button type="button" />}
@@ -45,7 +54,7 @@ export function GroupCard({
           <div className="min-w-0 flex-1">
             <p className="truncate font-medium">{group.name}</p>
             <p className="truncate text-sm text-muted-foreground">
-              {group.members.length === 0
+              {needsSetup
                 ? "Belum ada anggota"
                 : group.members.map((m) => m.fullName).join(", ")}
             </p>
@@ -55,7 +64,10 @@ export function GroupCard({
               WA tersambung
             </Badge>
           ) : null}
-          <ChevronDown className="size-4 shrink-0 text-muted-foreground transition-transform group-data-[panel-open]:rotate-180" strokeWidth={2} />
+          <ChevronDown
+            className="size-4 shrink-0 text-muted-foreground transition-transform group-data-[panel-open]:rotate-180"
+            strokeWidth={2}
+          />
         </CollapsibleTrigger>
 
         <CollapsibleContent>
@@ -64,7 +76,7 @@ export function GroupCard({
 
             <div>
               <p className="mb-2 text-sm font-medium">Anggota</p>
-              {group.members.length === 0 ? (
+              {needsSetup ? (
                 <p className="text-sm text-muted-foreground">
                   Belum ada anggota.
                 </p>
@@ -100,19 +112,19 @@ export function GroupCard({
               )}
             </div>
 
-            <Separator />
-
-            {configured ? (
-              <EditGroupForm
-                key={group.members.map((m) => m.profileId).join(",")}
-                groupId={group.id}
-                students={students}
-                takenIds={takenIds}
-                currentLink={group.wa_group_link}
-              />
+            {group.wa_group_link ? (
+              <a
+                href={group.wa_group_link}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="inline-flex w-fit items-center gap-1.5 rounded-full bg-emerald-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-opacity hover:opacity-90"
+              >
+                <MessageCircle className="size-3.5" strokeWidth={2} />
+                Buka Grup WhatsApp
+              </a>
             ) : (
               <p className="text-sm text-muted-foreground">
-                Sambungkan Supabase untuk mengaktifkan aksi ini.
+                Belum ada link grup WhatsApp.
               </p>
             )}
 
@@ -143,6 +155,45 @@ export function GroupCard({
                 </ul>
               )}
             </div>
+
+            {configured ? (
+              <>
+                <Separator />
+
+                {/* Adding members / changing the WA link is a rarer,
+                 * deliberate action, so it stays tucked away once the group
+                 * already has people in it — the member list and WA button
+                 * above cover what the admin checks day-to-day. */}
+                <Collapsible defaultOpen={needsSetup}>
+                  <CollapsibleTrigger
+                    className="group flex w-fit items-center gap-1.5 text-sm font-medium text-primary"
+                    render={<button type="button" />}
+                  >
+                    <Settings2 className="size-3.5" strokeWidth={2} />
+                    Kelola anggota & link WA
+                    <ChevronDown
+                      className="size-3.5 transition-transform group-data-[panel-open]:rotate-180"
+                      strokeWidth={2}
+                    />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="pt-3">
+                      <EditGroupForm
+                        key={group.members.map((m) => m.profileId).join(",")}
+                        groupId={group.id}
+                        students={students}
+                        takenIds={takenIds}
+                        currentLink={group.wa_group_link}
+                      />
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Sambungkan Supabase untuk mengaktifkan aksi ini.
+              </p>
+            )}
           </CardContent>
         </CollapsibleContent>
       </Collapsible>
