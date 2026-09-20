@@ -25,7 +25,6 @@ export async function createGroup(
   const parsed = groupSchema.safeParse({
     course_id: formData.get("course_id"),
     name: formData.get("name"),
-    notes: formData.get("notes"),
     wa_group_link: formData.get("wa_group_link"),
     profile_ids: formData.getAll("profile_ids"),
   });
@@ -40,7 +39,6 @@ export async function createGroup(
     .insert({
       course_id: parsed.data.course_id,
       name: parsed.data.name,
-      notes: parsed.data.notes || null,
       wa_group_link: parsed.data.wa_group_link || null,
     })
     .select("id")

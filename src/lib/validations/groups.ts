@@ -5,7 +5,6 @@ const waLink = z.url({ error: "Link WA tidak valid." }).optional().or(z.literal(
 export const groupSchema = z.object({
   course_id: z.uuid({ error: "Mata kuliah tidak valid." }),
   name: z.string().trim().min(1, { error: "Nama kelompok wajib diisi." }),
-  notes: z.string().trim().optional().or(z.literal("")),
   wa_group_link: waLink,
   profile_ids: z.array(z.uuid()).optional().default([]),
 });
