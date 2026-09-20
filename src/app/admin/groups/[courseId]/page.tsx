@@ -15,7 +15,7 @@ import {
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { getAllCoursesForAdmin } from "@/lib/data/courses";
 import {
-  getAllGroupsForAdmin,
+  getAllGroups,
   getCourseTaskDeadlines,
   getStudentProfilesForSelect,
 } from "@/lib/data/groups";
@@ -28,9 +28,9 @@ export default async function AdminCourseGroupsPage({
 }) {
   const configured = isSupabaseConfigured();
   const { courseId } = await params;
-  const [courses, allGroups, students, tasks] = await Promise.all([
+  const [courses, groups, students, tasks] = await Promise.all([
     getAllCoursesForAdmin(),
-    getAllGroupsForAdmin(),
+    getAllGroups(courseId),
     getStudentProfilesForSelect(),
     getCourseTaskDeadlines(courseId),
   ]);
@@ -39,8 +39,6 @@ export default async function AdminCourseGroupsPage({
   if (!course) {
     notFound();
   }
-
-  const groups = allGroups.filter((g) => g.course_id === courseId);
 
   // One student belongs to at most one group per course, so everyone already
   // placed in this course is greyed out in every picker on this page.

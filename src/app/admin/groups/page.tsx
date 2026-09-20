@@ -5,12 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { getAllCoursesForAdmin } from "@/lib/data/courses";
-import { getAllGroupsForAdmin } from "@/lib/data/groups";
+import { getAllGroups } from "@/lib/data/groups";
 
 export default async function AdminGroupsPage() {
   const [courses, groups] = await Promise.all([
     getAllCoursesForAdmin(),
-    getAllGroupsForAdmin(),
+    getAllGroups(),
   ]);
 
   const counts = new Map<string, number>();

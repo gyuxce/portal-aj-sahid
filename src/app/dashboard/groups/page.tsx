@@ -3,10 +3,10 @@ import { ArrowRight, Users } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/dashboard/empty-state";
-import { getMyGroupsForStudent } from "@/lib/data/groups";
+import { getAllGroups } from "@/lib/data/groups";
 
 export default async function StudentGroupsPage() {
-  const groups = await getMyGroupsForStudent();
+  const groups = await getAllGroups();
 
   const courses = new Map<
     string,
@@ -31,15 +31,15 @@ export default async function StudentGroupsPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Kelompok</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Pilih mata kuliah untuk lihat kelompokmu.
+          Pilih mata kuliah untuk lihat semua kelompok.
         </p>
       </div>
 
       {courses.size === 0 ? (
         <EmptyState
           icon={Users}
-          title="Belum tergabung di kelompok manapun"
-          description="Admin belum memasukkanmu ke kelompok. Hubungi admin kelas kalau ini keliru."
+          title="Belum ada kelompok"
+          description="Admin belum membuat kelompok untuk mata kuliah manapun."
         />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">

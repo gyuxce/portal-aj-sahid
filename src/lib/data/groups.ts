@@ -1,7 +1,6 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentProfile } from "@/lib/dal";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import type { Group } from "@/lib/types/database";
 
@@ -123,64 +122,20 @@ async function fetchGroupsWithCourse(courseIds?: string[]): Promise<RawGroup[]> 
   }));
 }
 
-export async function getAllGroupsForAdmin(): Promise<GroupWithDetails[]> {
+// Every signed-in user — admin or student — can read every group (see
+// groups_select_authenticated / group_members_select_authenticated in the
+// RLS migration): a small alih-jenjang class expects everyone to be able to
+// see the whole roster's groupings, not just their own. Pass a courseId to
+// scope the query to one course's page instead of the whole class.
+export async function getAllGroups(courseId?: string): Promise<GroupWithDetails[]> {
   if (!isSupabaseConfigured()) {
-    return DUMMY_GROUPS;
+    return courseId
+      ? DUMMY_GROUPS.filter((g) => g.course_id === courseId)
+      : DUMMY_GROUPS;
   }
 
-  const groups = await fetchGroupsWithCourse();
+  const groups = await fetchGroupsWithCourse(courseId ? [courseId] : undefined);
   return attachDetails(groups);
-}
-
-export async function getMyGroupsForStudent(): Promise<GroupWithDetails[]> {
-  if (!isSupabaseConfigured()) {
-    return DUMMY_GROUPS;
-  }
-
-  const profile = await getCurrentProfile();
-  if (!profile) {
-    return [];
-  }
-
-  const supabase = await createClient();
-  const { data: memberships, error } = await supabase
-    .from("group_members")
-    .select("group_id")
-    .eq("profile_id", profile.id);
-
-  if (error) {
-    throw new Error("Gagal memuat data kelompok.");
-  }
-
-  const groupIds = (memberships ?? []).map((m) => m.group_id);
-  if (groupIds.length === 0) {
-    return [];
-  }
-
-  const { data: groups, error: groupsError } = await supabase
-    .from("groups")
-    .select("*")
-    .in("id", groupIds)
-    .order("name");
-
-  if (groupsError) {
-    throw new Error("Gagal memuat data kelompok.");
-  }
-
-  const uniqueCourseIds = [...new Set((groups ?? []).map((g) => g.course_id))];
-  const { data: courses } = await supabase
-    .from("courses")
-    .select("id, name, code")
-    .in("id", uniqueCourseIds);
-  const courseMap = new Map((courses ?? []).map((c) => [c.id, c]));
-
-  const rawGroups: RawGroup[] = (groups ?? []).map((g) => ({
-    ...g,
-    courseName: courseMap.get(g.course_id)?.name ?? "Mata kuliah",
-    courseCode: courseMap.get(g.course_id)?.code ?? "",
-  }));
-
-  return attachDetails(rawGroups);
 }
 
 export async function getStudentProfilesForSelect(): Promise<
