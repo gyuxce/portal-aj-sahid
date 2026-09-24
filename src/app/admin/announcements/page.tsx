@@ -116,7 +116,10 @@ export default async function AdminAnnouncementsPage() {
                 ) : null}
               </CardHeader>
               <CardContent>
-                <AnnouncementBody text={announcement.body} />
+                <AnnouncementBody
+                  text={announcement.body}
+                  imageUrl={announcement.imageUrl}
+                />
                 {configured ? (
                   <EditAnnouncementForm
                     announcement={announcement}

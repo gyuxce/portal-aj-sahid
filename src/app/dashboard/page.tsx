@@ -16,11 +16,12 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { AnnouncementCarousel } from "@/components/dashboard/announcement-carousel";
 import { DeadlineBadge } from "@/components/dashboard/deadline-badge";
 import { getCurrentProfile } from "@/lib/dal";
 import { getActiveCoursesForStudent } from "@/lib/data/courses";
 import { getUpcomingTasksForStudent } from "@/lib/data/tasks";
-import { getLatestAnnouncementsForDashboard } from "@/lib/data/announcements";
+import { getPublishedAnnouncementsForStudent } from "@/lib/data/announcements";
 import { formatDayOfWeek, formatDeadline, formatTime } from "@/lib/format";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
@@ -51,11 +52,20 @@ export default async function DashboardPage() {
   const configured = isSupabaseConfigured();
   const profile = configured ? await getCurrentProfile() : null;
   const displayName = profile?.full_name ?? "Mahasiswa";
-  const [courses, upcomingTasks, latestAnnouncements] = await Promise.all([
+  const [courses, upcomingTasks, announcements] = await Promise.all([
     getActiveCoursesForStudent(),
     getUpcomingTasksForStudent(3),
-    getLatestAnnouncementsForDashboard(2),
+    getPublishedAnnouncementsForStudent(),
   ]);
+  const latestAnnouncements = announcements.slice(0, 2);
+  const bannerAnnouncements = announcements
+    .filter((a) => a.imageUrl)
+    .map((a) => ({
+      id: a.id,
+      title: a.title,
+      body: a.body,
+      imageUrl: a.imageUrl!,
+    }));
 
   const weeklySchedule = courses
     .flatMap((course) =>
@@ -90,6 +100,8 @@ export default async function DashboardPage() {
           Semua jadwal, tugas, dan info kelas alih jenjang ada di satu tempat.
         </p>
       </div>
+
+      <AnnouncementCarousel announcements={bannerAnnouncements} />
 
       {weeklySchedule.length > 0 ? (
         <div>

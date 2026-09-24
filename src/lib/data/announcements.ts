@@ -7,6 +7,7 @@ import type { Announcement } from "@/lib/types/database";
 export type AnnouncementWithCourse = Announcement & {
   courseName: string | null;
   courseCode: string | null;
+  imageUrl: string | null;
 };
 
 const now = new Date().toISOString();
@@ -19,11 +20,13 @@ const DUMMY_ANNOUNCEMENTS: AnnouncementWithCourse[] = [
     body: "Portal ini memuat jadwal, tugas, dan pengumuman kelas alih jenjang.",
     is_pinned: true,
     status: "published",
+    image_path: null,
     created_by: "dummy-admin",
     created_at: now,
     updated_at: now,
     courseName: null,
     courseCode: null,
+    imageUrl: null,
   },
   {
     id: "dummy-ann-2",
@@ -32,11 +35,13 @@ const DUMMY_ANNOUNCEMENTS: AnnouncementWithCourse[] = [
     body: "Pertemuan pindah ke pukul 19.30.",
     is_pinned: false,
     status: "published",
+    image_path: null,
     created_by: "dummy-admin",
     created_at: now,
     updated_at: now,
     courseName: "Pemrograman Web Lanjut",
     courseCode: "MK-101",
+    imageUrl: null,
   },
 ];
 
@@ -51,9 +56,10 @@ async function attachCourseInfo(
     ),
   ];
 
+  const supabase = await createClient();
+
   const courseMap = new Map<string, { name: string; code: string }>();
   if (courseIds.length > 0) {
-    const supabase = await createClient();
     const { data: courses } = await supabase
       .from("courses")
       .select("id, name, code")
@@ -67,6 +73,10 @@ async function attachCourseInfo(
     ...a,
     courseName: a.course_id ? (courseMap.get(a.course_id)?.name ?? null) : null,
     courseCode: a.course_id ? (courseMap.get(a.course_id)?.code ?? null) : null,
+    imageUrl: a.image_path
+      ? supabase.storage.from("announcement-images").getPublicUrl(a.image_path)
+          .data.publicUrl
+      : null,
   }));
 }
 
@@ -101,13 +111,6 @@ export async function getPublishedAnnouncementsForStudent(): Promise<
 
   const withCourse = await attachCourseInfo(data ?? []);
   return sortPinnedFirst(withCourse);
-}
-
-export async function getLatestAnnouncementsForDashboard(
-  limit: number,
-): Promise<AnnouncementWithCourse[]> {
-  const all = await getPublishedAnnouncementsForStudent();
-  return all.slice(0, limit);
 }
 
 export async function getActiveCoursesForAnnouncementForm(): Promise<

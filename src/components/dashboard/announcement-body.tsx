@@ -1,16 +1,31 @@
 import { ExternalLink } from "lucide-react";
 
-const URL_REGEX = /(https?:\/\/[^\s]+)/g;
+import { URL_REGEX, extractFirstUrl } from "@/lib/text";
 
 /** Renders announcement body text with any URL turned into a clickable
  * link, plus a tappable button for the first URL found — plain pasted
- * links otherwise render as static, non-clickable text. */
-export function AnnouncementBody({ text }: { text: string }) {
+ * links otherwise render as static, non-clickable text. Optionally shows
+ * the attached banner image above the text. */
+export function AnnouncementBody({
+  text,
+  imageUrl,
+}: {
+  text: string;
+  imageUrl?: string | null;
+}) {
   const parts = text.split(URL_REGEX);
-  const firstUrl = text.match(URL_REGEX)?.[0] ?? null;
+  const firstUrl = extractFirstUrl(text);
 
   return (
     <>
+      {imageUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element -- external Supabase Storage URL, not a local asset next/image can optimize
+        <img
+          src={imageUrl}
+          alt=""
+          className="mb-3 max-h-64 w-full rounded-2xl object-cover"
+        />
+      ) : null}
       <p className="whitespace-pre-wrap text-sm text-muted-foreground">
         {parts.map((part, i) =>
           part.match(URL_REGEX) ? (

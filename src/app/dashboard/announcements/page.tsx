@@ -62,7 +62,10 @@ export default async function StudentAnnouncementsPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <AnnouncementBody text={announcement.body} />
+              <AnnouncementBody
+                text={announcement.body}
+                imageUrl={announcement.imageUrl}
+              />
             </CardContent>
           </Card>
         ))
