@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { AnnouncementBody } from "@/components/dashboard/announcement-body";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import { getPublishedAnnouncementsForStudent } from "@/lib/data/announcements";
 import { formatDateTime } from "@/lib/format";
@@ -61,9 +62,7 @@ export default async function StudentAnnouncementsPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <p className="whitespace-pre-wrap text-sm text-muted-foreground">
-                {announcement.body}
-              </p>
+              <AnnouncementBody text={announcement.body} />
             </CardContent>
           </Card>
         ))

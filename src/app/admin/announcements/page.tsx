@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { AnnouncementBody } from "@/components/dashboard/announcement-body";
 import { ConfirmDeleteButton } from "@/components/dashboard/confirm-delete-button";
 import { EmptyState } from "@/components/dashboard/empty-state";
 import {
@@ -115,9 +116,7 @@ export default async function AdminAnnouncementsPage() {
                 ) : null}
               </CardHeader>
               <CardContent>
-                <p className="whitespace-pre-wrap text-sm text-muted-foreground">
-                  {announcement.body}
-                </p>
+                <AnnouncementBody text={announcement.body} />
                 {configured ? (
                   <EditAnnouncementForm
                     announcement={announcement}
