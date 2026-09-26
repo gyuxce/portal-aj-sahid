@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 
 import {
   updateGroupPresentation,
@@ -8,6 +8,7 @@ import {
 } from "@/lib/actions/groups";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "@/components/ui/toast";
 
 function toDateValue(value: string) {
   const date = new Date(value);
@@ -31,10 +32,26 @@ export function PresentationScheduleForm({
     null,
   );
 
+  // Notifikasi toast — di effect karena ini side effect ke sistem luar
+  // (toast manager), bukan setState React.
+  useEffect(() => {
+    if (state?.success) {
+      toast.add({ title: "Jadwal presentasi disimpan.", type: "success" });
+    } else if (state?.error) {
+      toast.add({ title: state.error, type: "error" });
+    }
+  }, [state]);
+
   return (
     <form action={formAction} className="flex flex-wrap items-end gap-2">
       <input type="hidden" name="group_id" value={groupId} />
       <Input
+        // Key di-tie ke nilai dari server: begitu berhasil simpan dan
+        // revalidatePath ngirim currentPresentationAt baru, React nge-remount
+        // input ini (bukan reuse instance lama) — jadi defaultValue-nya
+        // nggak "berubah sementara masih ke-mount" (itu yang bikin Base UI
+        // protes dan Next dev nampilin overlay error, nutupin toast/loading).
+        key={currentPresentationAt ?? "none"}
         aria-label="Jadwal presentasi kelompok"
         name="presentation_at"
         type="date"

@@ -12,10 +12,13 @@ export const taskSchema = z.object({
     error: "Pilih jenis tugas.",
   }),
   description: z.string().trim().optional().or(z.literal("")),
+  // Opsional — sebagian tugas belum punya tanggal pasti dari dosen.
   deadline: z
     .string()
-    .min(1, { error: "Deadline wajib diisi." })
-    .refine((value) => !Number.isNaN(new Date(value).getTime()), {
+    .trim()
+    .optional()
+    .or(z.literal(""))
+    .refine((value) => !value || !Number.isNaN(new Date(value).getTime()), {
       error: "Format deadline tidak valid.",
     }),
 });

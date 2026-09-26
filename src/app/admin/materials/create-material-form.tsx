@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 
 import { createMaterial } from "@/lib/actions/materials";
 import {
-  ALLOWED_MATERIAL_MIME_TYPES,
+  ALLOWED_MATERIAL_DOCUMENT_MIME_TYPES,
   MAX_MATERIAL_FILE_SIZE,
   detectMaterialTypeFromFileName,
 } from "@/lib/validations/materials";
@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
 type Mode = "link" | "file";
@@ -54,12 +55,11 @@ export function CreateMaterialForm({
           return;
         }
         if (
-          ALLOWED_MATERIAL_MIME_TYPES.length > 0 &&
           file.type &&
-          !ALLOWED_MATERIAL_MIME_TYPES.includes(file.type)
+          !ALLOWED_MATERIAL_DOCUMENT_MIME_TYPES.includes(file.type)
         ) {
           setError(
-            `"${file.name}" tipenya tidak didukung. Gunakan PDF, Word, PPT, Excel, atau ZIP.`,
+            `"${file.name}" tipenya tidak didukung. Gunakan PDF, Word, PPT, Excel, atau ZIP. Foto screenshot pakai form "Tambah foto" di bawah.`,
           );
           return;
         }
@@ -117,16 +117,17 @@ export function CreateMaterialForm({
       setPending(false);
 
       if (failures.length > 0) {
-        setError(
-          `${successCount} materi tersimpan, ${failures.length} gagal: ${failures.join(", ")}.`,
-        );
+        const message = `${successCount} materi tersimpan, ${failures.length} gagal: ${failures.join(", ")}.`;
+        setError(message);
+        toast.add({ title: message, type: "error" });
       }
       if (successCount > 0) {
-        setSuccessMessage(
+        const message =
           successCount === 1
             ? "Materi berhasil ditambahkan."
-            : `${successCount} materi berhasil ditambahkan.`,
-        );
+            : `${successCount} materi berhasil ditambahkan.`;
+        setSuccessMessage(message);
+        toast.add({ title: message, type: "success" });
       }
       if (failures.length === 0) {
         form.reset();
@@ -143,10 +144,12 @@ export function CreateMaterialForm({
 
     if (result?.error) {
       setError(result.error);
+      toast.add({ title: result.error, type: "error" });
       return;
     }
 
     setSuccessMessage("Materi berhasil ditambahkan.");
+    toast.add({ title: "Materi berhasil ditambahkan.", type: "success" });
     form.reset();
   }
 
@@ -275,14 +278,14 @@ export function CreateMaterialForm({
             className="rounded-lg border border-input bg-transparent px-3 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-muted file:px-2.5 file:py-1 file:text-xs file:font-medium"
           />
           <p className="text-xs text-muted-foreground">
-            Pilih beberapa file sekaligus (misal materi + file kelompok) — tiap file jadi materi terpisah.
+            Pilih beberapa file sekaligus — tiap file jadi materi terpisah. Untuk foto screenshot, pakai form &quot;Tambah foto&quot; di bawah.
           </p>
         </div>
       )}
 
       <div className="sm:col-span-2">
         <Button type="submit" disabled={pending}>
-          {uploadProgress ?? (pending ? "Menyimpan..." : "Tambah materi")}
+          {uploadProgress ?? (pending ? "Menyimpan..." : "Simpan")}
         </Button>
       </div>
     </form>

@@ -127,7 +127,9 @@ export default async function StudentCourseGroupsPage({
                       >
                         <span className="font-medium">{task.title}</span>
                         <span className="text-muted-foreground">
-                          {formatDeadline(task.deadline)}
+                          {task.deadline
+                            ? formatDeadline(task.deadline)
+                            : "Tanpa deadline"}
                         </span>
                       </li>
                     ))}

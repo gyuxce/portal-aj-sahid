@@ -14,6 +14,7 @@ export type MaterialType =
   | "doc"
   | "xls"
   | "zip"
+  | "photo"
   | "link"
   | "other";
 export type ImportSourceType = "csv" | "xlsx";
@@ -112,7 +113,7 @@ export interface Database {
           title: string;
           task_type: TaskType;
           description: string | null;
-          deadline: string;
+          deadline: string | null;
           status: ActiveStatus;
           created_by: string;
           updated_by: string | null;
@@ -124,7 +125,6 @@ export interface Database {
           course_id: string;
           title: string;
           task_type: TaskType;
-          deadline: string;
           created_by: string;
         };
         Update: Partial<Database["public"]["Tables"]["tasks"]["Row"]>;

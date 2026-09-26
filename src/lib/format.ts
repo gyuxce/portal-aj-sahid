@@ -85,6 +85,7 @@ const MATERIAL_TYPE_LABEL: Record<string, string> = {
   doc: "DOC",
   xls: "XLS",
   zip: "ZIP",
+  photo: "Foto",
   link: "Link",
   other: "File",
 };

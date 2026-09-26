@@ -13,9 +13,26 @@ export default async function AdminMaterialsPage() {
     getAllMaterialsForAdmin(),
   ]);
 
-  const counts = new Map<string, number>();
+  const counts = new Map<string, { materi: number; foto: number }>();
   for (const m of materials) {
-    counts.set(m.course_id, (counts.get(m.course_id) ?? 0) + 1);
+    const entry = counts.get(m.course_id) ?? { materi: 0, foto: 0 };
+    if (m.material_type === "photo") {
+      entry.foto += 1;
+    } else {
+      entry.materi += 1;
+    }
+    counts.set(m.course_id, entry);
+  }
+
+  function formatCounts(courseId: string) {
+    const { materi, foto } = counts.get(courseId) ?? { materi: 0, foto: 0 };
+    if (materi === 0 && foto === 0) {
+      return "0 materi";
+    }
+    const parts: string[] = [];
+    if (materi > 0) parts.push(`${materi} materi`);
+    if (foto > 0) parts.push(`${foto} foto`);
+    return parts.join(", ");
   }
 
   return (
@@ -52,7 +69,7 @@ export default async function AdminMaterialsPage() {
                       ) : null}
                     </div>
                     <p className="truncate text-sm text-muted-foreground">
-                      {course.code} · {counts.get(course.id) ?? 0} materi
+                      {course.code} · {formatCounts(course.id)}
                     </p>
                   </div>
                   <ArrowRight className="size-4 shrink-0 text-muted-foreground" />

@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Download, FolderOpen, Plus } from "lucide-react";
+import { ArrowLeft, Camera, Eye, FolderOpen, Plus } from "lucide-react";
 
 import { CreateMaterialForm } from "@/app/admin/materials/create-material-form";
+import { CreatePhotoForm } from "@/app/admin/materials/create-photo-form";
 import { EditMaterialForm } from "@/app/admin/materials/edit-material-form";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDeleteButton } from "@/components/dashboard/confirm-delete-button";
@@ -93,6 +94,29 @@ export default async function AdminCourseMaterialsPage({
         </CardContent>
       </Card>
 
+      <Card className="rounded-3xl">
+        <CardHeader className="flex-row items-center gap-3 space-y-0">
+          <span className="flex size-9 items-center justify-center rounded-xl bg-accent text-accent-foreground">
+            <Camera className="size-4.5" strokeWidth={2} />
+          </span>
+          <div>
+            <CardTitle>Tambah foto</CardTitle>
+            <CardDescription>
+              Screenshot bukti hadir Zoom atau dokumentasi lain — tetap masuk ke pertemuan yang sama.
+            </CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {configured ? (
+            <CreatePhotoForm courseId={course.id} />
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Sambungkan Supabase untuk mengaktifkan aksi ini.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
       {meetings.length === 0 ? (
         <EmptyState
           icon={FolderOpen}
@@ -108,12 +132,24 @@ export default async function AdminCourseMaterialsPage({
                 : "Lainnya"}
             </p>
             <div className="flex flex-col gap-2">
-              {meeting.materials.map((material) => (
+              {meeting.materials.map((material) => {
+                const href = material.external_url ?? material.fileUrl;
+                const isPhoto = material.material_type === "photo";
+                return (
                 <Card key={material.id} className="rounded-2xl">
                   <CardContent className="flex flex-wrap items-center gap-3 py-4">
-                    <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
-                      <FolderOpen className="size-4.5" strokeWidth={2} />
-                    </span>
+                    {isPhoto && href ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={href}
+                        alt={material.title}
+                        className="size-10 shrink-0 rounded-2xl object-cover"
+                      />
+                    ) : (
+                      <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
+                        <FolderOpen className="size-4.5" strokeWidth={2} />
+                      </span>
+                    )}
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="truncate font-medium">
@@ -129,20 +165,18 @@ export default async function AdminCourseMaterialsPage({
                         </p>
                       ) : null}
                     </div>
-                    {(() => {
-                      const href = material.external_url ?? material.fileUrl;
-                      return href ? (
-                        <a
-                          href={href}
-                          target="_blank"
-                          rel="noreferrer noopener"
-                          className="text-muted-foreground hover:text-foreground"
-                          aria-label="Buka link"
-                        >
-                          <Download className="size-4" />
-                        </a>
-                      ) : null;
-                    })()}
+                    {href ? (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                        className="text-muted-foreground hover:text-foreground"
+                        aria-label="Lihat file"
+                        title="Lihat file"
+                      >
+                        <Eye className="size-4" />
+                      </a>
+                    ) : null}
                     {configured ? (
                       <div className="flex items-center gap-1">
                         <EditMaterialForm material={material} />
@@ -153,7 +187,8 @@ export default async function AdminCourseMaterialsPage({
                     ) : null}
                   </CardContent>
                 </Card>
-              ))}
+                );
+              })}
             </div>
           </div>
         ))

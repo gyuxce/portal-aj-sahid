@@ -232,7 +232,8 @@ export default async function DashboardPage() {
                       {task.title}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
-                      {task.courseCode} · {formatDeadline(task.deadline)}
+                      {task.courseCode}
+                      {task.deadline ? ` · ${formatDeadline(task.deadline)}` : ""}
                     </p>
                   </div>
                   <DeadlineBadge deadline={task.deadline} />

@@ -9,7 +9,11 @@ const STATUS_CLASS: Record<string, string> = {
   upcoming: "",
 };
 
-export function DeadlineBadge({ deadline }: { deadline: string }) {
+export function DeadlineBadge({ deadline }: { deadline: string | null }) {
+  if (!deadline) {
+    return null;
+  }
+
   const status = getDeadlineStatus(deadline);
 
   return (

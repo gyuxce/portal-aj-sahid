@@ -120,7 +120,11 @@ export default async function AdminCourseTasksPage({
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                  <span>Deadline: {formatDeadline(task.deadline)}</span>
+                  <span>
+                    {task.deadline
+                      ? `Deadline: ${formatDeadline(task.deadline)}`
+                      : "Tanpa deadline"}
+                  </span>
                   <Badge variant="outline" className="gap-1 rounded-full">
                     {task.task_type === "group" ? (
                       <Users className="size-3" strokeWidth={2} />

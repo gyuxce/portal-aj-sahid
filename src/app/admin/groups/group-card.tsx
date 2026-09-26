@@ -175,7 +175,9 @@ export function GroupCard({
                     >
                       <span className="font-medium">{task.title}</span>
                       <span className="text-muted-foreground">
-                        {formatDeadline(task.deadline)}
+                        {task.deadline
+                          ? formatDeadline(task.deadline)
+                          : "Tanpa deadline"}
                       </span>
                     </li>
                   ))}

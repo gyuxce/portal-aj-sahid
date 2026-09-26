@@ -13,7 +13,7 @@ export type MemberInfo = {
 export type CourseTaskDeadline = {
   id: string;
   title: string;
-  deadline: string;
+  deadline: string | null;
 };
 
 export type GroupWithDetails = Group & {

@@ -14,6 +14,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/toast";
 
 export function ConfirmDeleteButton({
   onDelete,
@@ -59,8 +60,19 @@ export function ConfirmDeleteButton({
             disabled={pending}
             onClick={() => {
               startTransition(async () => {
-                await onDelete();
-                setOpen(false);
+                try {
+                  await onDelete();
+                  setOpen(false);
+                  toast.add({ title: "Berhasil dihapus.", type: "success" });
+                } catch (error) {
+                  toast.add({
+                    title:
+                      error instanceof Error
+                        ? error.message
+                        : "Gagal menghapus.",
+                    type: "error",
+                  });
+                }
               });
             }}
           >

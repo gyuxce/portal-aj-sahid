@@ -46,7 +46,9 @@ export async function createTask(
       title: parsed.data.title,
       task_type: parsed.data.task_type,
       description: parsed.data.description || null,
-      deadline: new Date(parsed.data.deadline).toISOString(),
+      deadline: parsed.data.deadline
+        ? new Date(parsed.data.deadline).toISOString()
+        : null,
       created_by: admin.id,
     })
     .select("id")
@@ -92,7 +94,9 @@ export async function updateTask(
       title: parsed.data.title,
       task_type: parsed.data.task_type,
       description: parsed.data.description || null,
-      deadline: new Date(parsed.data.deadline).toISOString(),
+      deadline: parsed.data.deadline
+        ? new Date(parsed.data.deadline).toISOString()
+        : null,
       updated_by: admin.id,
     })
     .eq("id", taskId);

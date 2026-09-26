@@ -5,7 +5,7 @@ import { useRef, useState, type FormEvent } from "react";
 import { createTask } from "@/lib/actions/tasks";
 import { createMaterial } from "@/lib/actions/materials";
 import {
-  ALLOWED_MATERIAL_MIME_TYPES,
+  ALLOWED_MATERIAL_DOCUMENT_MIME_TYPES,
   MAX_MATERIAL_FILE_SIZE,
 } from "@/lib/validations/materials";
 import { createClient } from "@/lib/supabase/client";
@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
 type MaterialMode = "link" | "file";
@@ -56,7 +57,9 @@ export function CreateTaskForm({
     const taskResult = await createTask(null, fd);
     if (taskResult?.error || !taskResult?.taskId) {
       setPending(false);
-      setError(taskResult?.error ?? "Gagal menyimpan tugas.");
+      const message = taskResult?.error ?? "Gagal menyimpan tugas.";
+      setError(message);
+      toast.add({ title: message, type: "error" });
       return;
     }
 
@@ -77,7 +80,7 @@ export function CreateTaskForm({
         }
         if (
           materialFile.type &&
-          !ALLOWED_MATERIAL_MIME_TYPES.includes(materialFile.type)
+          !ALLOWED_MATERIAL_DOCUMENT_MIME_TYPES.includes(materialFile.type)
         ) {
           setPending(false);
           setError(
@@ -113,7 +116,9 @@ export function CreateTaskForm({
       const materialResult = await createMaterial(null, materialFd);
       if (materialResult?.error) {
         setPending(false);
-        setError(`Tugas tersimpan, tapi materi gagal: ${materialResult.error}`);
+        const message = `Tugas tersimpan, tapi materi gagal: ${materialResult.error}`;
+        setError(message);
+        toast.add({ title: message, type: "error" });
         return;
       }
     }
@@ -121,6 +126,7 @@ export function CreateTaskForm({
     setPending(false);
     setSuccess(true);
     setIncludeMaterial(false);
+    toast.add({ title: "Tugas berhasil ditambahkan.", type: "success" });
     formRef.current?.reset();
   }
 
@@ -194,8 +200,8 @@ export function CreateTaskForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="deadline">Deadline</Label>
-        <Input id="deadline" name="deadline" type="date" required />
+        <Label htmlFor="deadline">Deadline (opsional)</Label>
+        <Input id="deadline" name="deadline" type="date" />
       </div>
 
       <div className="flex flex-col gap-2 sm:col-span-2">

@@ -1,15 +1,19 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 
 import { updateTask, type ActionState } from "@/lib/actions/tasks";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { toast } from "@/components/ui/toast";
 import type { TaskWithCourse } from "@/lib/data/tasks";
 
-function toDateValue(deadline: string) {
+function toDateValue(deadline: string | null) {
+  if (!deadline) {
+    return "";
+  }
   const date = new Date(deadline);
   const offset = date.getTimezoneOffset();
   const local = new Date(date.getTime() - offset * 60 * 1000);
@@ -29,6 +33,30 @@ export function EditTaskForm({
     action,
     null,
   );
+
+  // Tutup panel setelah berhasil simpan — kalau tetap terbuka, input
+  // deadline/title dsb (uncontrolled, pakai defaultValue) bakal nerima
+  // task.deadline/title baru dari revalidatePath sementara masih ke-mount,
+  // dan Base UI protes ("changing default value ... after initialized"),
+  // yang di Next dev muncul sebagai overlay error. Disesuaikan saat render
+  // (bukan di useEffect) mengikuti pola React untuk derived state.
+  const [prevState, setPrevState] = useState(state);
+  if (state !== prevState) {
+    setPrevState(state);
+    if (state?.success) {
+      setOpen(false);
+    }
+  }
+
+  // Notifikasi toast — dipisah ke effect (bukan ikut blok di atas) karena
+  // ini side effect ke sistem luar (toast manager), bukan setState React.
+  useEffect(() => {
+    if (state?.success) {
+      toast.add({ title: "Perubahan tugas disimpan.", type: "success" });
+    } else if (state?.error) {
+      toast.add({ title: state.error, type: "error" });
+    }
+  }, [state]);
 
   if (!open) {
     return (
@@ -98,14 +126,13 @@ export function EditTaskForm({
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor={`deadline-${task.id}`} className="text-xs">
-          Deadline
+          Deadline (opsional)
         </Label>
         <Input
           id={`deadline-${task.id}`}
           name="deadline"
           type="date"
           defaultValue={toDateValue(task.deadline)}
-          required
         />
       </div>
 

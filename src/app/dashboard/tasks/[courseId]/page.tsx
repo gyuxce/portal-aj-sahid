@@ -79,7 +79,9 @@ export default async function StudentCourseTasksPage({
                   <DeadlineBadge deadline={task.deadline} />
                 </div>
                 <CardDescription>
-                  Deadline: {formatDeadline(task.deadline)}
+                  {task.deadline
+                    ? `Deadline: ${formatDeadline(task.deadline)}`
+                    : "Tanpa deadline"}
                 </CardDescription>
               </div>
             </CardHeader>

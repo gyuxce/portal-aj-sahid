@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const MAX_MATERIAL_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
-export const ALLOWED_MATERIAL_MIME_TYPES = [
+export const ALLOWED_MATERIAL_DOCUMENT_MIME_TYPES = [
   "application/pdf",
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -14,13 +14,27 @@ export const ALLOWED_MATERIAL_MIME_TYPES = [
   "application/x-zip-compressed",
 ];
 
+export const ALLOWED_MATERIAL_IMAGE_MIME_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+];
+
+// Combined — used where a single upload widget still needs to cover both
+// (server-side bucket policy, task's inline "materi pendukung" uploader).
+export const ALLOWED_MATERIAL_MIME_TYPES = [
+  ...ALLOWED_MATERIAL_DOCUMENT_MIME_TYPES,
+  ...ALLOWED_MATERIAL_IMAGE_MIME_TYPES,
+];
+
 export const materialSchema = z
   .object({
     course_id: z.uuid({ error: "Mata kuliah tidak valid." }),
     task_id: z.uuid().optional().or(z.literal("")),
     title: z.string().trim().min(1, { error: "Judul materi wajib diisi." }),
     material_type: z.enum(
-      ["pdf", "ppt", "doc", "xls", "zip", "link", "other"],
+      ["pdf", "ppt", "doc", "xls", "zip", "photo", "link", "other"],
       { error: "Pilih tipe materi." },
     ),
     meeting_number: z.coerce
@@ -52,6 +66,11 @@ const EXTENSION_TYPE_MAP: Record<string, MaterialType> = {
   xls: "xls",
   xlsx: "xls",
   zip: "zip",
+  jpg: "photo",
+  jpeg: "photo",
+  png: "photo",
+  webp: "photo",
+  heic: "photo",
 };
 
 export function detectMaterialTypeFromFileName(fileName: string): MaterialType {
@@ -66,7 +85,7 @@ export function detectMaterialTypeFromFileName(fileName: string): MaterialType {
 export const materialUpdateSchema = z.object({
   title: z.string().trim().min(1, { error: "Judul materi wajib diisi." }),
   material_type: z.enum(
-    ["pdf", "ppt", "doc", "xls", "zip", "link", "other"],
+    ["pdf", "ppt", "doc", "xls", "zip", "photo", "link", "other"],
     { error: "Pilih tipe materi." },
   ),
   meeting_number: z.coerce

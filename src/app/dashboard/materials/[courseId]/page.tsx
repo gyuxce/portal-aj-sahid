@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Download, FolderOpen } from "lucide-react";
+import { ArrowLeft, Eye, FolderOpen } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -70,6 +70,7 @@ export default async function StudentCourseMaterialsPage({
             <div className="flex flex-col gap-2">
               {meeting.materials.map((material) => {
                 const href = material.external_url ?? material.fileUrl;
+                const isPhoto = material.material_type === "photo";
                 return (
                   <a
                     key={material.id}
@@ -77,12 +78,22 @@ export default async function StudentCourseMaterialsPage({
                     target="_blank"
                     rel="noreferrer noopener"
                     className={href ? "block" : "pointer-events-none block"}
+                    aria-label={`Lihat ${material.title}`}
                   >
                     <Card className="rounded-2xl transition-colors hover:bg-muted/40">
                       <CardContent className="flex items-center gap-3 py-4">
-                        <span className="brand-gradient flex size-10 shrink-0 items-center justify-center rounded-2xl text-white">
-                          <FolderOpen className="size-4.5" strokeWidth={2} />
-                        </span>
+                        {isPhoto && href ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={href}
+                            alt={material.title}
+                            className="size-10 shrink-0 rounded-2xl object-cover"
+                          />
+                        ) : (
+                          <span className="brand-gradient flex size-10 shrink-0 items-center justify-center rounded-2xl text-white">
+                            <FolderOpen className="size-4.5" strokeWidth={2} />
+                          </span>
+                        )}
                         <div className="min-w-0 flex-1">
                           <p className="truncate font-medium">
                             {material.title}
@@ -96,7 +107,7 @@ export default async function StudentCourseMaterialsPage({
                         <Badge variant="outline" className="rounded-full">
                           {formatMaterialType(material.material_type)}
                         </Badge>
-                        <Download className="size-4 shrink-0 text-muted-foreground" />
+                        <Eye className="size-4 shrink-0 text-muted-foreground" />
                       </CardContent>
                     </Card>
                   </a>
