@@ -4,6 +4,7 @@ import { SectionNav } from "@/components/dashboard/section-nav";
 import { Topbar } from "@/components/dashboard/topbar";
 import { studentNavItems } from "@/components/dashboard/nav-items";
 import { getCurrentProfile, requireUser } from "@/lib/dal";
+import { getStudentNavBadgeTimestamps } from "@/lib/data/nav-badges";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import type { UserRole } from "@/lib/types/database";
 
@@ -26,6 +27,8 @@ export default async function DashboardLayout({
     profile = fetchedProfile ?? PREVIEW_PROFILE;
   }
 
+  const badgeTimestamps = await getStudentNavBadgeTimestamps();
+
   return (
     <div className="flex min-h-screen">
       <Sidebar
@@ -34,6 +37,7 @@ export default async function DashboardLayout({
         fullName={profile.full_name}
         role={profile.role}
         isAdminArea={false}
+        badgeTimestamps={badgeTimestamps}
       />
 
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
@@ -44,7 +48,7 @@ export default async function DashboardLayout({
             role={profile.role}
             isAdminArea={false}
           />
-          <SectionNav items={studentNavItems} />
+          <SectionNav items={studentNavItems} badgeTimestamps={badgeTimestamps} />
         </div>
 
         {!configured ? (

@@ -93,3 +93,39 @@ const MATERIAL_TYPE_LABEL: Record<string, string> = {
 export function formatMaterialType(type: string) {
   return MATERIAL_TYPE_LABEL[type] ?? type;
 }
+
+/** Sapaan yang berubah sesuai jam WIB (bukan jam server) — dipakai buat
+ * salam pembuka Beranda biar kerasa "hidup", bukan teks statis. */
+export function getGreeting(now: Date = new Date()) {
+  const hour = Number(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Jakarta",
+      hour: "numeric",
+      hourCycle: "h23",
+    }).format(now),
+  );
+
+  if (hour >= 4 && hour < 11) return "Selamat pagi";
+  if (hour >= 11 && hour < 15) return "Selamat siang";
+  if (hour >= 15 && hour < 19) return "Selamat sore";
+  return "Selamat malam";
+}
+
+/** Waktu relatif kasar ("X menit/jam/hari lalu") — buat label "diperbarui"
+ * di Beranda. Jatuh balik ke tanggal biasa kalau sudah lebih dari seminggu
+ * supaya nggak nampilin angka hari yang nggak informatif lagi. */
+export function formatRelativeTime(value: string | Date) {
+  const diffMs = Date.now() - new Date(value).getTime();
+  const minutes = Math.floor(diffMs / 60_000);
+
+  if (minutes < 1) return "baru saja";
+  if (minutes < 60) return `${minutes} menit lalu`;
+
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} jam lalu`;
+
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days} hari lalu`;
+
+  return formatDeadline(value);
+}

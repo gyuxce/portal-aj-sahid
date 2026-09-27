@@ -6,7 +6,52 @@ import { GraduationCap } from "lucide-react";
 
 import { UserMenu } from "@/components/dashboard/user-menu";
 import type { NavItem } from "@/components/dashboard/nav-items";
+import { useNavBadge } from "@/hooks/use-nav-badge";
 import { cn } from "@/lib/utils";
+
+function SidebarLink({
+  item,
+  isActive,
+  latestIso,
+}: {
+  item: NavItem;
+  isActive: boolean;
+  latestIso: string | null | undefined;
+}) {
+  const hasNew = useNavBadge(item.href, latestIso, isActive);
+
+  if (!item.available) {
+    return (
+      <span
+        aria-disabled
+        className="flex cursor-not-allowed items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-muted-foreground/50"
+      >
+        {item.icon}
+        {item.label}
+      </span>
+    );
+  }
+
+  return (
+    <Link
+      href={item.href}
+      className={cn(
+        "flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
+        isActive
+          ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
+          : "text-muted-foreground hover:bg-muted hover:text-foreground",
+      )}
+    >
+      <span className="relative flex items-center">
+        {item.icon}
+        {hasNew ? (
+          <span className="absolute -right-1 -top-1 size-1.5 rounded-full bg-destructive" />
+        ) : null}
+      </span>
+      {item.label}
+    </Link>
+  );
+}
 
 export function Sidebar({
   items,
@@ -14,12 +59,14 @@ export function Sidebar({
   fullName,
   role,
   isAdminArea,
+  badgeTimestamps,
 }: {
   items: NavItem[];
   homeHref: string;
   fullName: string;
   role: "admin" | "student";
   isAdminArea: boolean;
+  badgeTimestamps?: Record<string, string | null>;
 }) {
   const pathname = usePathname();
 
@@ -41,33 +88,13 @@ export function Sidebar({
               ? pathname === item.href
               : pathname.startsWith(item.href);
 
-          if (!item.available) {
-            return (
-              <span
-                key={item.href}
-                aria-disabled
-                className="flex cursor-not-allowed items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-muted-foreground/50"
-              >
-                {item.icon}
-                {item.label}
-              </span>
-            );
-          }
-
           return (
-            <Link
+            <SidebarLink
               key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
-                isActive
-                  ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
-              )}
-            >
-              {item.icon}
-              {item.label}
-            </Link>
+              item={item}
+              isActive={isActive}
+              latestIso={badgeTimestamps?.[item.href]}
+            />
           );
         })}
       </nav>

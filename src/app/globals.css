@@ -145,3 +145,24 @@
     var(--brand-to)
   );
 }
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee linear infinite;
+}
+
+/* Teks berjalan bisa mengganggu/susah dibaca buat yang sensitif ke gerakan
+   — hormati preferensi sistem dan cukup diam di posisi awal. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation: none;
+  }
+}

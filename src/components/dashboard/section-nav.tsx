@@ -4,9 +4,60 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
+import { useNavBadge } from "@/hooks/use-nav-badge";
 import type { NavItem } from "@/components/dashboard/nav-items";
 
-export function SectionNav({ items }: { items: NavItem[] }) {
+function NavPill({
+  item,
+  isActive,
+  latestIso,
+}: {
+  item: NavItem;
+  isActive: boolean;
+  latestIso: string | null | undefined;
+}) {
+  const hasNew = useNavBadge(item.href, latestIso, isActive);
+
+  if (!item.available) {
+    return (
+      <span
+        aria-disabled
+        className="flex shrink-0 cursor-not-allowed items-center gap-1.5 rounded-full border border-dashed border-border px-3.5 py-1.5 text-sm text-muted-foreground/50"
+      >
+        {item.icon}
+        {item.label}
+      </span>
+    );
+  }
+
+  return (
+    <Link
+      href={item.href}
+      className={cn(
+        "flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium transition-all",
+        isActive
+          ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
+          : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground",
+      )}
+    >
+      <span className="relative flex items-center">
+        {item.icon}
+        {hasNew ? (
+          <span className="absolute -right-1 -top-1 size-1.5 rounded-full bg-destructive" />
+        ) : null}
+      </span>
+      {item.label}
+    </Link>
+  );
+}
+
+export function SectionNav({
+  items,
+  badgeTimestamps,
+}: {
+  items: NavItem[];
+  badgeTimestamps?: Record<string, string | null>;
+}) {
   const pathname = usePathname();
 
   return (
@@ -20,33 +71,13 @@ export function SectionNav({ items }: { items: NavItem[] }) {
             ? pathname === item.href
             : pathname.startsWith(item.href);
 
-        if (!item.available) {
-          return (
-            <span
-              key={item.href}
-              aria-disabled
-              className="flex shrink-0 cursor-not-allowed items-center gap-1.5 rounded-full border border-dashed border-border px-3.5 py-1.5 text-sm text-muted-foreground/50"
-            >
-              {item.icon}
-              {item.label}
-            </span>
-          );
-        }
-
         return (
-          <Link
+          <NavPill
             key={item.href}
-            href={item.href}
-            className={cn(
-              "flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-sm font-medium transition-all",
-              isActive
-                ? "bg-primary text-primary-foreground shadow-sm shadow-primary/30"
-                : "bg-muted text-muted-foreground hover:bg-muted/70 hover:text-foreground",
-            )}
-          >
-            {item.icon}
-            {item.label}
-          </Link>
+            item={item}
+            isActive={isActive}
+            latestIso={badgeTimestamps?.[item.href]}
+          />
         );
       })}
     </nav>
