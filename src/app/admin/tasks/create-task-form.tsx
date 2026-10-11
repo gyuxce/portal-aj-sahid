@@ -63,53 +63,75 @@ export function CreateTaskForm({
       return;
     }
 
-    if (includeMaterial && materialTitle) {
+    const hasFile = materialMode === "file" && materialFile instanceof File && materialFile.size > 0;
+    const hasLink = materialMode === "link" && Boolean(materialUrl);
+
+    // Dulu syaratnya materialTitle terisi — kalau admin centang "Sertakan
+    // materi pendukung", upload file, tapi judulnya dikosongin (wajar,
+    // placeholder-nya kayak contoh bukan "wajib diisi"), blok ini kelewat
+    // begitu aja: nggak ke-upload, nggak ada error, tugas tetap "berhasil
+    // disimpan". Sekarang syaratnya ada konten (file/link), bukan judul —
+    // judul boleh kosong khusus mode file (dipakai nama file sebagai ganti).
+    if (includeMaterial && (hasFile || hasLink)) {
       const materialFd = new FormData();
       materialFd.set("course_id", courseId);
       materialFd.set("task_id", taskResult.taskId);
-      materialFd.set("title", materialTitle);
       materialFd.set("material_type", materialType);
 
-      if (materialMode === "file" && materialFile instanceof File && materialFile.size > 0) {
-        if (materialFile.size > MAX_MATERIAL_FILE_SIZE) {
+      if (hasFile) {
+        const file = materialFile as File;
+
+        if (file.size > MAX_MATERIAL_FILE_SIZE) {
           setPending(false);
-          setError(
-            "Tugas tersimpan, tapi file materi terlalu besar (maks 50MB) — tambahkan manual lewat menu Materi.",
-          );
+          const message = "Tugas tersimpan, tapi file materi terlalu besar (maks 50MB) — tambahkan manual lewat menu Materi.";
+          setError(message);
+          toast.add({ title: message, type: "error" });
           return;
         }
         if (
-          materialFile.type &&
-          !ALLOWED_MATERIAL_DOCUMENT_MIME_TYPES.includes(materialFile.type)
+          file.type &&
+          !ALLOWED_MATERIAL_DOCUMENT_MIME_TYPES.includes(file.type)
         ) {
           setPending(false);
-          setError(
-            "Tugas tersimpan, tapi tipe file materi tidak didukung — tambahkan manual lewat menu Materi.",
-          );
+          const message = "Tugas tersimpan, tapi tipe file materi tidak didukung — tambahkan manual lewat menu Materi.";
+          setError(message);
+          toast.add({ title: message, type: "error" });
           return;
         }
 
-        const extension = materialFile.name.includes(".")
-          ? materialFile.name.slice(materialFile.name.lastIndexOf("."))
+        const extension = file.name.includes(".")
+          ? file.name.slice(file.name.lastIndexOf("."))
           : "";
+        const nameWithoutExtension = file.name.includes(".")
+          ? file.name.slice(0, file.name.lastIndexOf("."))
+          : file.name;
         const path = `${courseId}/materials/${crypto.randomUUID()}${extension}`;
         const supabase = createClient();
         const { error: uploadErr } = await supabase.storage
           .from("class-materials")
-          .upload(path, materialFile);
+          .upload(path, file);
 
         if (uploadErr) {
           setPending(false);
-          setError(
-            `Tugas tersimpan, tapi upload materi gagal: ${uploadErr.message}`,
-          );
+          const message = `Tugas tersimpan, tapi upload materi gagal: ${uploadErr.message}`;
+          setError(message);
+          toast.add({ title: message, type: "error" });
           return;
         }
 
+        materialFd.set("title", materialTitle || nameWithoutExtension);
         materialFd.set("storage_path", path);
-        materialFd.set("file_name", materialFile.name);
-        materialFd.set("file_size", String(materialFile.size));
-      } else if (materialMode === "link" && materialUrl) {
+        materialFd.set("file_name", file.name);
+        materialFd.set("file_size", String(file.size));
+      } else {
+        if (!materialTitle) {
+          setPending(false);
+          const message = "Tugas tersimpan, tapi judul materi wajib diisi buat link — tambahkan manual lewat menu Materi.";
+          setError(message);
+          toast.add({ title: message, type: "error" });
+          return;
+        }
+        materialFd.set("title", materialTitle);
         materialFd.set("external_url", materialUrl);
       }
 
@@ -121,6 +143,12 @@ export function CreateTaskForm({
         toast.add({ title: message, type: "error" });
         return;
       }
+    } else if (includeMaterial) {
+      setPending(false);
+      const message = "Tugas tersimpan, tapi materi nggak ikut tersimpan — pilih file atau isi link dulu.";
+      setError(message);
+      toast.add({ title: message, type: "error" });
+      return;
     }
 
     setPending(false);
@@ -255,11 +283,17 @@ export function CreateTaskForm({
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="material_title" className="text-xs">
                 Judul materi
+                {materialMode === "file" ? " (opsional)" : ""}
               </Label>
               <Input
                 id="material_title"
                 name="material_title"
-                placeholder="Template ERD"
+                placeholder={
+                  materialMode === "file"
+                    ? "Kosongkan untuk pakai nama file"
+                    : "Template ERD"
+                }
+                required={materialMode === "link"}
               />
             </div>
             <div className="flex flex-col gap-1.5">
